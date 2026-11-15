@@ -3,8 +3,7 @@
 Keep your guild bank full. Guild Taxes sets aside a share of the gold you earn
 and pays it into the guild bank the next time you open it.
 
-This is a port of Guild Taxes for **WoW: Forever** (Interface 16001). It is
-built on the LbH edition of the addon.
+This is a port of Guild Taxes for **WoW: Forever** (Interface 16001).
 
 ## How it works
 
@@ -44,7 +43,6 @@ it to move it.
 | `/gt` | Open or close the main window |
 | `/gt status` | Print your outstanding tax in chat |
 | `/gt sync` | Ask all guild members for their current data |
-| `/gt resetall` | Clear all history and counters of the guild (Guild Master only) |
 
 ## Options
 
