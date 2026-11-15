@@ -370,11 +370,60 @@ function GuildTaxes:MigrateDatabase()
 	if self.db.profile.direct == nil then
 		self.db.profile.direct = true
 	end
+
+	-- Data saved under the first name only (before surnames were handled)
+	if self.playerName then
+		self:MigrateShortName(self.playerName)
+	end
+end
+
+--------------------------------------------------------------------------------
+-- Move status/history saved under "Name" to the roster name "Name Surname".
+function GuildTaxes:MigrateShortName(fullName)
+	if type(fullName) ~= "string" then return end
+	local shortName = fullName:match("^(%S+) ")
+	if not shortName then return end
+
+	local statusDB = self:GetStatusDB()
+	local old = statusDB[shortName]
+	if old then
+		local new = statusDB[fullName]
+		if not new then
+			statusDB[fullName] = old
+		elseif old.timestamp and (not new.timestamp or old.timestamp > new.timestamp) then
+			new.timestamp = old.timestamp
+			new.version = old.version
+			new.rate = old.rate
+			new.tax = old.tax
+			new.updated = old.updated
+		end
+		statusDB[shortName] = nil
+	end
+
+	local historyDB = self:GetHistoryDB()
+	local oldHistory = historyDB[shortName]
+	if oldHistory then
+		local newHistory = historyDB[fullName]
+		if not newHistory then
+			historyDB[fullName] = oldHistory
+		else
+			for key, value in pairs(oldHistory) do
+				newHistory[key] = math.max(newHistory[key] or 0, value or 0)
+			end
+		end
+		historyDB[shortName] = nil
+	end
 end
 
 --------------------------------------------------------------------------------
 function GuildTaxes:UpdatePlayerName()
-	self.playerName = UnitName("player")
+	-- WoW: Forever: characters have a surname, and the guild roster lists them
+	-- as "Name Surname". UnitName("player") alone returns just "Name".
+	local name, surname = (UnitNameUnmodified or UnitName)("player")
+	if surname and surname ~= "" and not IsSecret(surname) and not name:find(" ", 1, true) then
+		name = name .. " " .. surname
+	end
+	self.playerName = name
 	self.playerRealm = GetRealmName()
 	self.playerFullName = self.playerName .. "-" .. self.playerRealm
 end
@@ -567,13 +616,17 @@ function GuildTaxes:FillOutgoingQueue()
 
 	if self.numberMembers ~= nil and self.numberMembers > 0 then
 		for index = 1, self.numberMembers do
+			-- The roster can be mid-refresh and return nil for an index
 			local playerName = GetGuildRosterInfo(index)
-			playerName = Ambiguate(playerName, "guild")
-			local playerStatus = self:GetPlayerStatusDB(playerName)
-			if playerStatus == nil or playerStatus.updated == nil then
-				self:RequestStatus(playerName)
-			elseif playerStatus.updated + REFRESH_PLAYER_STATUS_PERIOD < time() then
-				self:RequestStatus(playerName, playerStatus.timestamp)
+			if playerName and not IsSecret(playerName) then
+				playerName = Ambiguate(playerName, "guild")
+				self:MigrateShortName(playerName)
+				local playerStatus = self:GetPlayerStatusDB(playerName)
+				if playerStatus == nil or playerStatus.updated == nil then
+					self:RequestStatus(playerName)
+				elseif playerStatus.updated + REFRESH_PLAYER_STATUS_PERIOD < time() then
+					self:RequestStatus(playerName, playerStatus.timestamp)
+				end
 			end
 		end
 	end
@@ -583,6 +636,8 @@ end
 
 --------------------------------------------------------------------------------
 function GuildTaxes:QueueIteration()
+	-- Schedule the next run first, so an error below can't stop the sync for good
+	C_Timer.After(QUEUE_ITERATION, GuildTaxes.QueueIteration)
 	if GuildTaxes.isReady and not InCombatLockdown() and not InChatMessagingLockdown() then
 		if #GuildTaxes.outgoingQueue > 0 then
 			local data = table.remove(GuildTaxes.outgoingQueue, 1)
@@ -603,7 +658,6 @@ function GuildTaxes:QueueIteration()
 			end
 		end
 	end
-	C_Timer.After(QUEUE_ITERATION, GuildTaxes.QueueIteration)
 end
 
 --------------------------------------------------------------------------------
@@ -614,7 +668,9 @@ function GuildTaxes:PurgeOldData()
 		local guildPlayers = {}
 		for index = 1, GuildTaxes.numberMembers do
 			local fullName = GetGuildRosterInfo(index)
-			table.insert(guildPlayers, Ambiguate(fullName, "guild"))
+			if fullName and not IsSecret(fullName) then
+				table.insert(guildPlayers, Ambiguate(fullName, "guild"))
+			end
 		end
 		self.nextPurgeTimestamp = time() + PURGE_DATA_PERIOD
 		-- TODO: purge old history records
@@ -1186,10 +1242,11 @@ function GuildTaxes:GUILD_ROSTER_UPDATE( ... )
 		self.numberMembersOnline = numOnline
 		needRefresh = true
 	end
-	if needRefresh then
-		if self.GUI:IsShown() then
-			self.GUI:RefreshTable()
+	if self.GUI:IsShown() then
+		if needRefresh then
+			self.GUI.updated = nil
 		end
+		self.GUI:RefreshTable()
 	end
 	if self.playerName then
         self:Ready()

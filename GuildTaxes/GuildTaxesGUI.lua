@@ -302,6 +302,12 @@ function GUI:Create()
 		GUI.updated = nil
 		GUI:UpdatePayedStatus()
 		GUI:RefreshTable()
+		-- Fresh roster (online state, ranks); GUILD_ROSTER_UPDATE refreshes the list
+		if C_GuildInfo and C_GuildInfo.GuildRoster then
+			C_GuildInfo.GuildRoster()
+		elseif GuildRoster then
+			GuildRoster()
+		end
 	end)
 	frame:SetScript("OnHide", function()
 		PlaySound(SOUNDKIT.IG_CHARACTER_INFO_CLOSE)
@@ -374,10 +380,14 @@ function GUI:RefreshTable()
 	local year = tonumber(date("%Y"))
 
 	local data = {}
+	local missing = 0
 	for index = 1, (GuildTaxes.numberMembers or 0) do
 		local fullName, rank, rankIndex, _, _, _, _, _, online, _, class = GetGuildRosterInfo(index)
-		if fullName then
+		if not fullName then
+			missing = missing + 1
+		else
 			local shortName = Ambiguate(fullName, "guild")
+			GuildTaxes:MigrateShortName(shortName)
 			local r = {
 				fullName = fullName,
 				rank = rank,
@@ -388,7 +398,8 @@ function GUI:RefreshTable()
 				months = {},
 			}
 
-			local userStatus = statusDB[shortName]
+			-- Own row: live values, not the last synced copy
+			local userStatus = r.isPlayer and GuildTaxes:GetStatus(shortName) or statusDB[shortName]
 			if userStatus ~= nil then
 				r.timestamp = userStatus.timestamp
 				r.version = userStatus.version
@@ -423,7 +434,12 @@ function GUI:RefreshTable()
 	end)
 
 	self.data = data
-	self.updated = now
+	-- Roster still loading: no flood lock, so the next GUILD_ROSTER_UPDATE refreshes
+	if missing > 0 or #data == 0 then
+		self.updated = nil
+	else
+		self.updated = now
+	end
 	self:Render()
 end
 

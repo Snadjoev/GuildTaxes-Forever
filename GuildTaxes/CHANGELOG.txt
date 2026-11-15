@@ -1,4 +1,7 @@
 GuildTaxes (0.3.0)
+  * Fixed names on WoW: Forever (first name + surname): own row in the list now shows its values; old data is moved over
+  * Guild sync no longer stops for the session when the roster is still loading
+  * Member list fills in once the guild roster has loaded
   * Per-loot tax messages in chat are off by default (option "Print transactions")
   * Guild name is shown without the realm
   * Main window rebuilt in the Forever / Professions window style (portrait frame, inset table, modern scroll bar, resize grip, pay button, class-coloured names)
