@@ -1,0 +1,23 @@
+## Interface: 16001
+## Version: 0.3.0
+## Title: |cff69ccf0Guild Taxes|r
+## Title-ruRU: |cff69ccf0Налоги гильдии|r
+## Notes: Keep your guild bank full (WoW: Forever)
+## Notes-ruRU: Пополняй гильдейский банк просто
+## SavedVariables: GuildTaxesDB
+## Category: Economy
+## IconTexture: Interface\Icons\INV_Misc_Coin_02
+
+# Libraries
+embeds.xml
+
+# Localization
+localization.ru.lua
+localization.en.lua
+localization.de.lua
+localization.pt.lua
+
+# Main module
+GuildTaxes.lua
+GuildTaxesConfig.lua
+GuildTaxesGUI.lua

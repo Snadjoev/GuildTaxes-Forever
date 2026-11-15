@@ -1,0 +1,63 @@
+GuildTaxes (0.3.0)
+  * Per-loot tax messages in chat are off by default (option "Print transactions")
+  * Guild name is shown without the realm
+  * Main window rebuilt in the Forever / Professions window style (portrait frame, inset table, modern scroll bar, resize grip, pay button, class-coloured names)
+  * Port for WoW: Forever (Interface 16001, modern Midnight API)
+  * Updated Ace3 libraries (AceConfigDialog 93, AceGUI 41, AceDB 40, AceComm 14, ChatThrottleLib 32)
+  * Guild bank / mailbox detection via PLAYER_INTERACTION_MANAGER_FRAME_SHOW/HIDE
+  * Only registers events the client knows
+  * Pay link uses the "addon:" link type (EventRegistry SetItemRef)
+  * Pauses guild sync during chat messaging lockdown; ignores secret values
+  * Fixed duplicate deposit check (typo "amoun")
+
+GuildTaxes (0.2.3)
+  * Minor Bug Fixes
+  
+GuildTaxes (0.2.2)
+  * Fixed Bug, where taxes stoped beiing calculated mid session
+  
+GuildTaxes (0.1.10)
+  * Increase version number for WoW 8.2.0
+
+GuildTaxes (0.1.9)
+  * Increase version number for WoW 8.1.5
+
+GuildTaxes (0.1.8)
+  * Fix some bugs
+
+GuildTaxes (0.1.6)
+  * Update english locale
+  * Add Brazilian portuguese translation
+
+GuildTaxes (0.1.5)
+  * 7.3 patch
+  * Fix some communications bugs
+
+GuildTaxes (0.1.4)
+  * Added german translation
+  * Fix minor bugs
+
+GuildTaxes (0.1.3)
+  * Fix some bugs
+
+GuildTaxes (0.1.2)
+  * Fix filling offline sync queue lua error
+
+GuildTaxes (0.1.1)
+  * Add tax rate in stats window
+  * Notify status for guild members when player login
+  * Turn off sync while in combat
+  * Offline players synchronization
+
+GuildTaxes (0.1.0)
+  * Synchronization between guild members
+
+GuildTaxes (0.0.5)
+  * Main GUI window with current payment status
+
+GuildTaxes (0.0.4)
+
+  * Calculation of taxes
+  * Rate configuration
+  * Autopayment & its configuration
+  * Logging settings
